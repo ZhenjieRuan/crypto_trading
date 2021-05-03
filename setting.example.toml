@@ -1,0 +1,4 @@
+[binance]
+api_key = "<Your Binance API Key>"
+api_secret = "<Your Binance API Secret>"
+host = "https://testnet.binance.vision" # Use binance spot testnet
