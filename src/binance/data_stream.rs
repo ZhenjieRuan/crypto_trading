@@ -1,4 +1,5 @@
-use anyhow::{bail, Result};
+use crate::binance::websocket::Candlestick;
+use anyhow::Result;
 use crossbeam_channel::Sender;
 use futures::stream::StreamExt;
 use tokio_tungstenite::{connect_async, tungstenite::Message};
@@ -18,7 +19,9 @@ impl MarketStream {
     let (mut stream, _) = connect_async(stream_url).await?;
     while let Some(item) = stream.next().await {
       match item {
-        Ok(msg) => sender.send(msg).expect("Failed to send message"),
+        Ok(msg) => {
+          sender.send(msg).expect("Failed to send message");
+        }
         Err(e) => log::error!("Failed to get message from stream: {:#?}", e),
       }
     }

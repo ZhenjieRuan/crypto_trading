@@ -1,4 +1,5 @@
 use binance::api::{OrderInput, OrderSide, OrderType, TimeInForce};
+use binance::websocket::Candlestick;
 use shared::{config::Setting, utils};
 
 mod binance;
@@ -24,7 +25,8 @@ async fn test_market_data_stream(config: Setting) {
   });
 
   while let Ok(msg) = receiver.recv_timeout(std::time::Duration::new(5, 0)) {
-    log::info!("{}", msg)
+    let candle_stick: Candlestick = serde_json::from_str(&msg.to_string()).unwrap();
+    log::info!("{:#?}", candle_stick)
   }
 }
 
