@@ -1,14 +1,15 @@
 use anyhow::Result;
 use serde::Deserialize;
 
-#[derive(Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize)]
 pub struct BinanceSetting {
   pub api_key: String,
   pub api_secret: String,
   pub host: String,
+  pub ws_base: String,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize)]
 pub struct Setting {
   pub binance: BinanceSetting,
 }
