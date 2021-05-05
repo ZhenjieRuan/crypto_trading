@@ -1,14 +1,11 @@
 use anyhow::{ensure, Result};
+use serde_json::Value;
 use std::collections::BTreeMap;
 
-use crate::binance::api::{OrderInput, OrderType};
+use crate::binance::api::{CandlestickInput, OrderInput, OrderType};
 
-pub fn get_timestamp() -> Result<u128> {
-  Ok(
-    std::time::SystemTime::now()
-      .duration_since(std::time::UNIX_EPOCH)?
-      .as_millis(),
-  )
+pub fn get_timestamp() -> i64 {
+  chrono::Utc::now().timestamp_millis()
 }
 
 pub fn construct_query(params: BTreeMap<String, String>) -> String {
@@ -19,6 +16,16 @@ pub fn construct_query(params: BTreeMap<String, String>) -> String {
   req.pop();
   req
 }
+
+pub fn to_i64(v: &Value) -> i64 {
+  v.as_i64().unwrap()
+}
+
+pub fn to_f64(v: &Value) -> f64 {
+  v.as_str().unwrap().parse().unwrap()
+}
+
+/// Query Builders
 
 pub fn build_order_query(request: OrderInput) -> Result<String> {
   // Sanity check for order input
@@ -77,6 +84,27 @@ pub fn build_order_query(request: OrderInput) -> Result<String> {
   }
   if let Some(recv_window) = request.recv_window {
     params.insert("recvWindow".into(), recv_window.to_string());
+  }
+
+  Ok(construct_query(params))
+}
+
+pub fn build_candlestick_query(req: CandlestickInput) -> Result<String> {
+  let mut params: BTreeMap<String, String> = BTreeMap::new();
+  params.insert("symbol".into(), req.symbol);
+  params.insert("interval".into(), req.interval);
+  if let Some(start_time) = req.start_time {
+    params.insert("startTime".into(), start_time.to_string());
+    ensure!(
+      req.end_time.is_some(),
+      "End time can't be None if start time is set"
+    );
+    params.insert("endTime".into(), req.end_time.unwrap().to_string());
+  }
+
+  if let Some(limit) = req.limit {
+    ensure!(limit <= 1000, "Limit value exceeds 1000");
+    params.insert("limit".into(), limit.to_string());
   }
 
   Ok(construct_query(params))

@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct Candle {
+pub struct StreamCandle {
   #[serde(rename = "t")]
   pub start_time: u128,
   #[serde(rename = "T")]
@@ -47,5 +47,5 @@ pub struct Candlestick {
   #[serde(rename = "s")]
   pub symbol: String,
   #[serde(rename = "k")]
-  pub candle: Candle,
+  pub candle: StreamCandle,
 }

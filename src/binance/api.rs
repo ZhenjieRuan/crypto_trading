@@ -17,6 +17,39 @@ impl From<Spot> for String {
   }
 }
 
+pub enum Market {
+  Candlestick,
+}
+
+impl From<Market> for String {
+  fn from(endpoint: Market) -> Self {
+    String::from(match endpoint {
+      Market::Candlestick => "/api/v3/klines",
+    })
+  }
+}
+
+pub struct CandlestickInput {
+  pub symbol: String,
+  pub interval: String,
+  pub start_time: Option<i64>,
+  pub end_time: Option<i64>,
+  pub limit: Option<u64>, // Default 500, max 1000
+}
+
+pub struct CandlestickResp {
+  pub open_time: i64,
+  pub open: f64,
+  pub high: f64,
+  pub low: f64,
+  pub close: f64,
+  pub volume: f64,
+  pub close_time: i64,
+  pub quote_asset_vol: f64,
+  pub num_trades: i64,
+  pub taker_buy_base_asset_vol: f64,
+  pub taker_buy_quote_asset_vol: f64,
+}
 /// Enum Spec: https://binance-docs.github.io/apidocs/spot/en/#public-api-definitions
 #[derive(Clone)]
 pub enum OrderSide {
@@ -106,5 +139,5 @@ pub struct OrderInput {
   pub iceberg_qty: Option<f64>,
   pub new_order_resp_type: Option<OrderRespType>,
   pub recv_window: Option<u64>, // Can't be greater than 60000,
-  pub timestamp: u128,
+  pub timestamp: i64,
 }

@@ -5,6 +5,7 @@ use serde::Deserialize;
 pub struct BinanceSetting {
   pub api_key: String,
   pub api_secret: String,
+  pub test_host: String,
   pub host: String,
   pub ws_base: String,
 }
