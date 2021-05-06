@@ -15,7 +15,11 @@ impl MarketStream {
   pub async fn subscribe(&self, stream: String, sender: Sender<String>) -> Result<()> {
     let stream_url = format!("{}/{}", self.endpoint, stream);
     log::info!("Connecting to {}", stream_url);
-    let (mut stream, _) = connect_async(stream_url).await?;
+    let (mut stream, resp) = connect_async(stream_url)
+      .await
+      .map_err(|e| log::error!("Error connecting to stream: {:#?}", e))
+      .unwrap();
+    log::debug!("Websocket server response: {:#?}", resp);
     while let Some(item) = stream.next().await {
       match item {
         Ok(msg) => match msg {
@@ -25,7 +29,7 @@ impl MarketStream {
               .map_err(|e| log::error!("Failed to send data to receiver: {:#?}", e));
           }
           Message::Ping(ping) => {
-            log::info!("Receiced Ping Msg");
+            log::info!("Received Ping Msg");
             stream
               .send(Message::Pong(ping))
               .await

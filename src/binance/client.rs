@@ -17,14 +17,23 @@ pub struct Client {
 }
 
 impl Client {
-  pub fn new(api_key: String, api_secret: String, host: String) -> Result<Self> {
+  pub fn new(
+    api_key: String,
+    api_secret: String,
+    host: String,
+    proxy: Option<String>,
+  ) -> Result<Self> {
     let mut headers = header::HeaderMap::new();
     headers.insert("Content-Type", HeaderValue::from_static("application/json"));
     headers.insert("X-MBX-APIKEY", HeaderValue::from_str(&api_key)?);
-    let client = reqwest::Client::builder()
-      .connect_timeout(Duration::new(5, 0))
-      .default_headers(headers)
-      .build()?;
+    let mut client_builder = reqwest::Client::builder()
+      .connect_timeout(Duration::new(10, 0))
+      .default_headers(headers);
+    if let Some(proxy) = proxy {
+      client_builder = client_builder.proxy(reqwest::Proxy::https(proxy)?);
+    }
+    let client = client_builder.build()?;
+
     Ok(Self {
       api_secret,
       host,

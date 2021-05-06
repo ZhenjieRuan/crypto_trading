@@ -10,7 +10,7 @@ serde_json = "1.0.64"
 jsonrpc = "0.12.0"
 anyhow = "1.0.40"
 serde = { version = "1.0.125", features = ["derive"] }
-reqwest = { version = "0.11.3", features = ["json"] }
+reqwest = { version = "0.11.3", features = ["json", "socks"] }
 tokio = { version = "1.5.0", features = ["full"] }
 hmac = "0.11.0"
 sha2 = "0.9.3"

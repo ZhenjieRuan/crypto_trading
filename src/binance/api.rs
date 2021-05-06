@@ -37,6 +37,7 @@ pub struct CandlestickInput {
   pub limit: Option<u64>, // Default 500, max 1000
 }
 
+#[derive(Debug)]
 pub struct CandlestickResp {
   pub open_time: i64,
   pub open: f64,
@@ -50,6 +51,7 @@ pub struct CandlestickResp {
   pub taker_buy_base_asset_vol: f64,
   pub taker_buy_quote_asset_vol: f64,
 }
+
 /// Enum Spec: https://binance-docs.github.io/apidocs/spot/en/#public-api-definitions
 #[derive(Clone)]
 pub enum OrderSide {

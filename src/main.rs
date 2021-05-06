@@ -5,6 +5,7 @@ use shared::{config::Setting, utils};
 
 mod binance;
 mod shared;
+mod strategy;
 
 #[tokio::main]
 async fn main() {
@@ -16,6 +17,7 @@ async fn main() {
     config.binance.api_key.clone(),
     config.binance.api_secret.clone(),
     config.binance.host.clone(),
+    config.binance.proxy.clone(),
   )
   .unwrap();
 
@@ -24,10 +26,7 @@ async fn main() {
     .checked_sub_signed(chrono::Duration::days(21))
     .unwrap()
     .timestamp_millis();
-  let end_time = now
-    .checked_sub_signed(chrono::Duration::days(1))
-    .unwrap()
-    .timestamp_millis();
+  let end_time = now.timestamp_millis();
   let candlestick_req = binance::api::CandlestickInput {
     symbol: "BTCUSDT".into(),
     interval: "1d".into(),
@@ -40,13 +39,15 @@ async fn main() {
     .market_candlestick(candlestick_req)
     .await
     .unwrap();
+
+  test_market_data_stream(config).await;
 }
 
 async fn test_market_data_stream(config: Setting) {
   let wss_endpoint = config.binance.ws_base;
   let (sender, receiver) = crossbeam_channel::unbounded();
 
-  tokio::spawn(async {
+  tokio::spawn(async move {
     let market_stream = binance::data_stream::MarketStream::new(wss_endpoint);
     market_stream
       .subscribe("btcusdt@kline_1d".into(), sender)
@@ -55,7 +56,7 @@ async fn test_market_data_stream(config: Setting) {
 
   while let Ok(msg) = receiver.recv_timeout(std::time::Duration::new(5, 0)) {
     let candle_stick: Candlestick = serde_json::from_str(&msg).unwrap();
-    // log::info!("{:#?}", candle_stick)
+    log::info!("{:#?}", candle_stick)
   }
 }
 
@@ -64,6 +65,7 @@ async fn test_order_api(config: Setting) {
     config.binance.api_key.clone(),
     config.binance.api_secret.clone(),
     config.binance.host.clone(),
+    config.binance.proxy.clone(),
   )
   .unwrap();
 

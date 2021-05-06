@@ -8,6 +8,7 @@ pub struct BinanceSetting {
   pub test_host: String,
   pub host: String,
   pub ws_base: String,
+  pub proxy: Option<String>,
 }
 
 #[derive(Clone, Debug, Deserialize)]

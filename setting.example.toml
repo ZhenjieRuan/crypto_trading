@@ -1,4 +1,7 @@
 [binance]
 api_key = "<Your Binance API Key>"
 api_secret = "<Your Binance API Secret>"
-host = "https://testnet.binance.vision" # Use binance spot testnet
+test_host = "https://testnet.binance.vision" # Use binance spot testnet
+host = "https://api.binance.com"
+ws_base = "wss://stream.binance.com:9443/ws"
+proxy = "<Optional>"

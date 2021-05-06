@@ -36,8 +36,10 @@ pub fn build_order_query(request: OrderInput) -> Result<String> {
       ensure!(request.price.is_some(), "Missing Price");
     }
     OrderType::Market => {
-      ensure!(request.quantity.is_some(), "Missing Quantity");
-      ensure!(request.quote_order_qty.is_some(), "Missing Quote Order Qty");
+      ensure!(
+        request.quantity.is_some() || request.quote_order_qty.is_some(),
+        "Missing Quantity or Quote Order Qty"
+      );
     }
     OrderType::StopLoss | OrderType::TakeProfit => {
       ensure!(request.quantity.is_some(), "Missing Quantity");
