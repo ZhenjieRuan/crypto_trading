@@ -1,5 +1,5 @@
-use binance::api::{OrderInput, OrderSide, OrderType, TimeInForce};
-use binance::websocket::Candlestick;
+use binance::api::{KlineInput, OrderInput, OrderSide, OrderType, TimeInForce};
+use binance::websocket::Kline;
 use chrono::Utc;
 use shared::{config::Setting, utils};
 
@@ -27,7 +27,7 @@ async fn main() {
     .unwrap()
     .timestamp_millis();
   let end_time = now.timestamp_millis();
-  let candlestick_req = binance::api::CandlestickInput {
+  let kline_req = binance::api::KlineInput {
     symbol: "BTCUSDT".into(),
     interval: "1d".into(),
     start_time: Some(start_time),
@@ -35,12 +35,11 @@ async fn main() {
     limit: None,
   };
 
-  let candle_sticks = binance_client
-    .market_candlestick(candlestick_req)
-    .await
-    .unwrap();
+  let klines = binance_client.kline(kline_req).await.unwrap();
+  let spot_account_info = binance_client.spot_account_info().await.unwrap();
 
-  test_market_data_stream(config).await;
+  log::info!("Balance length: {:#?}", spot_account_info.balances.len());
+  log::info!("Klines length: {:#?}", klines.len());
 }
 
 async fn test_market_data_stream(config: Setting) {
@@ -55,7 +54,7 @@ async fn test_market_data_stream(config: Setting) {
   });
 
   while let Ok(msg) = receiver.recv_timeout(std::time::Duration::new(5, 0)) {
-    let candle_stick: Candlestick = serde_json::from_str(&msg).unwrap();
+    let candle_stick: Kline = serde_json::from_str(&msg).unwrap();
     log::info!("{:#?}", candle_stick)
   }
 }

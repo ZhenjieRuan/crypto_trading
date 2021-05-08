@@ -1,4 +1,4 @@
-use crate::binance::api::{CandlestickResp, OrderInput, OrderSide, OrderType};
+use crate::binance::api::{KlineResp, OrderInput, OrderSide, OrderType};
 use crate::binance::websocket::StreamCandle;
 use anyhow::{ensure, Result};
 use std::collections::VecDeque;
@@ -18,7 +18,7 @@ pub struct Turtle {
 }
 
 impl Turtle {
-  pub fn new(candles: Vec<CandlestickResp>, usdt_balance: f64, btc_balance: f64) -> Result<Self> {
+  pub fn new(candles: Vec<KlineResp>, usdt_balance: f64, btc_balance: f64) -> Result<Self> {
     ensure!(candles.len() > 20, "Not enough data supplied");
 
     // init with starting day high and low
@@ -74,7 +74,16 @@ impl Turtle {
     })
   }
 
-  pub fn execute(&self, curr_candle: StreamCandle) -> Result<Vec<OrderInput>> {
+  pub fn execute(&mut self, curr_candle: StreamCandle) -> Result<Vec<OrderInput>> {
+    self.pop_old_high_low();
+    self.update_high(
+      curr_candle.high.parse::<f64>().unwrap(),
+      curr_candle.close_time,
+    );
+    self.update_low(
+      curr_candle.low.parse::<f64>().unwrap(),
+      curr_candle.close_time,
+    );
     let curr_price = curr_candle.close.parse::<f64>()?;
     let total_asset = self.calc_total_asset(curr_price);
     // Turtle trades in terms of unit, if the price exceeds 20 day high,
@@ -192,6 +201,21 @@ impl Turtle {
       self.low_20.pop_front();
     }
     self.low_20.push_back((val, timestamp))
+  }
+
+  fn pop_old_high_low(&mut self) {
+    let high_front_timestamp = self.high_20.front().unwrap().1;
+    let low_front_timestamp = self.low_20.front().unwrap().1;
+    let time_limit = chrono::Utc::now()
+      .checked_sub_signed(chrono::Duration::days(20))
+      .unwrap()
+      .timestamp();
+    if high_front_timestamp < time_limit {
+      self.high_20.pop_front();
+    }
+    if low_front_timestamp < time_limit {
+      self.low_20.pop_front();
+    }
   }
 
   fn update_n(&mut self, tr: f64) {

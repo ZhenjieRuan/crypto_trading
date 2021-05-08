@@ -1,6 +1,7 @@
+use crate::binance::api::AccountInfoResp;
 use crate::shared::utils;
 use crate::{
-  binance::api::{CandlestickInput, CandlestickResp, Market, OrderInput, Spot},
+  binance::api::{KlineInput, KlineResp, Market, OrderInput, Spot},
   shared::utils::{to_f64, to_i64},
 };
 use anyhow::Result;
@@ -61,14 +62,27 @@ impl Client {
     Ok(())
   }
 
-  pub async fn market_candlestick(&self, input: CandlestickInput) -> Result<Vec<CandlestickResp>> {
-    let query = utils::build_candlestick_query(input)?;
-    let req_url = format!(
-      "{}{}?{}",
-      self.host,
-      String::from(Market::Candlestick),
-      query
-    );
+  pub async fn spot_account_info(&self) -> Result<AccountInfoResp> {
+    let query = utils::build_spot_account_info_query(None)?;
+    let signed_req = self.sign_request(Spot::AccountInfo.into(), Some(query));
+    Ok(
+      self
+        .client
+        .get(signed_req)
+        .send()
+        .await
+        .map_err(|e| {
+          log::error!("Error sending account info request: {:#?}", e);
+          e
+        })?
+        .json::<AccountInfoResp>()
+        .await?,
+    )
+  }
+
+  pub async fn kline(&self, input: KlineInput) -> Result<Vec<KlineResp>> {
+    let query = utils::build_kline_query(input)?;
+    let req_url = format!("{}{}?{}", self.host, String::from(Market::Kline), query);
     let raw_values = self
       .client
       .get(req_url)
@@ -79,7 +93,7 @@ impl Client {
     Ok(
       raw_values
         .iter()
-        .map(|row| CandlestickResp {
+        .map(|row| KlineResp {
           open_time: to_i64(&row[0]),
           open: to_f64(&row[1]),
           high: to_f64(&row[2]),
@@ -92,7 +106,7 @@ impl Client {
           taker_buy_base_asset_vol: to_f64(&row[9]),
           taker_buy_quote_asset_vol: to_f64(&row[10]),
         })
-        .collect::<Vec<CandlestickResp>>(),
+        .collect::<Vec<KlineResp>>(),
     )
   }
 

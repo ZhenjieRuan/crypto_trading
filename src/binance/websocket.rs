@@ -3,9 +3,9 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize, Debug)]
 pub struct StreamCandle {
   #[serde(rename = "t")]
-  pub start_time: u128,
+  pub start_time: i64,
   #[serde(rename = "T")]
-  pub close_time: u128,
+  pub close_time: i64,
   #[serde(rename = "s")]
   pub symbol: String,
   #[serde(rename = "i")]
@@ -39,11 +39,11 @@ pub struct StreamCandle {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct Candlestick {
+pub struct Kline {
   #[serde(rename = "e")]
   pub event_type: String,
   #[serde(rename = "E")]
-  pub event_time: u128,
+  pub event_time: i64,
   #[serde(rename = "s")]
   pub symbol: String,
   #[serde(rename = "k")]

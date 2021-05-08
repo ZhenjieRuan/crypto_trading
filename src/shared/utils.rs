@@ -2,7 +2,7 @@ use anyhow::{ensure, Result};
 use serde_json::Value;
 use std::collections::BTreeMap;
 
-use crate::binance::api::{CandlestickInput, OrderInput, OrderType};
+use crate::binance::api::{KlineInput, OrderInput, OrderType};
 
 pub fn get_timestamp() -> i64 {
   chrono::Utc::now().timestamp_millis()
@@ -91,7 +91,7 @@ pub fn build_order_query(request: OrderInput) -> Result<String> {
   Ok(construct_query(params))
 }
 
-pub fn build_candlestick_query(req: CandlestickInput) -> Result<String> {
+pub fn build_kline_query(req: KlineInput) -> Result<String> {
   let mut params: BTreeMap<String, String> = BTreeMap::new();
   params.insert("symbol".into(), req.symbol);
   params.insert("interval".into(), req.interval);
@@ -109,5 +109,18 @@ pub fn build_candlestick_query(req: CandlestickInput) -> Result<String> {
     params.insert("limit".into(), limit.to_string());
   }
 
+  Ok(construct_query(params))
+}
+
+pub fn build_spot_account_info_query(recv_window: Option<i64>) -> Result<String> {
+  let mut params: BTreeMap<String, String> = BTreeMap::new();
+  if let Some(window) = recv_window {
+    ensure!(window < 60000, "Recv window too long, can't exceed 60000");
+    params.insert("recvWindow".into(), window.to_string());
+  }
+  params.insert(
+    "timestamp".into(),
+    chrono::Utc::now().timestamp_millis().to_string(),
+  );
   Ok(construct_query(params))
 }
