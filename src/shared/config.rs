@@ -3,6 +3,8 @@ use serde::Deserialize;
 
 #[derive(Clone, Debug, Deserialize)]
 pub struct BinanceSetting {
+  pub spot_test_api_key: String,
+  pub spot_test_api_secret: String,
   pub api_key: String,
   pub api_secret: String,
   pub test_host: String,

@@ -1,3 +1,6 @@
+use crate::binance::client::Client;
+use crate::strategy::turtle_trade::Turtle;
+use crate::strategy::CandleStick;
 use binance::api::{KlineInput, OrderInput, OrderSide, OrderType, TimeInForce};
 use binance::websocket::Kline;
 use chrono::Utc;
@@ -21,6 +24,14 @@ async fn main() {
   )
   .unwrap();
 
+  let spot_testnet_client = binance::client::Client::new(
+    config.binance.spot_test_api_key.clone(),
+    config.binance.spot_test_api_secret.clone(),
+    config.binance.test_host.clone(),
+    config.binance.proxy.clone(),
+  )
+  .unwrap();
+
   let now = Utc::now();
   let start_time = now
     .checked_sub_signed(chrono::Duration::days(21))
@@ -36,14 +47,37 @@ async fn main() {
   };
 
   let klines = binance_client.kline(kline_req).await.unwrap();
-  let spot_account_info = binance_client.spot_account_info().await.unwrap();
+  let spot_account_info = spot_testnet_client.spot_account_info().await.unwrap();
 
-  log::info!("Balance length: {:#?}", spot_account_info.balances.len());
+  let mut btc_balance = 0.0;
+  let mut usdt_balance = 0.0;
+
+  for balance in &spot_account_info.balances {
+    if btc_balance != 0.0 && usdt_balance != 0.0 {
+      break;
+    }
+    if balance.asset == "BTC" {
+      btc_balance = balance.free.parse::<f64>().unwrap();
+    }
+    if balance.asset == "USDT" {
+      usdt_balance = balance.free.parse::<f64>().unwrap();
+    }
+  }
+
+  log::info!(
+    "BTC Balance: {} USDT Balance: {}",
+    btc_balance,
+    usdt_balance
+  );
   log::info!("Klines length: {:#?}", klines.len());
+
+  let turtle_strat = Turtle::new(klines, usdt_balance, btc_balance).unwrap();
+  start_test_turtle_strat(config, turtle_strat, spot_testnet_client).await;
 }
 
-async fn test_market_data_stream(config: Setting) {
+async fn start_test_turtle_strat(config: Setting, turtle: Turtle, test_client: Client) {
   let wss_endpoint = config.binance.ws_base;
+  let mut turtle = turtle;
   let (sender, receiver) = crossbeam_channel::unbounded();
 
   tokio::spawn(async move {
@@ -54,38 +88,13 @@ async fn test_market_data_stream(config: Setting) {
   });
 
   while let Ok(msg) = receiver.recv_timeout(std::time::Duration::new(5, 0)) {
-    let candle_stick: Kline = serde_json::from_str(&msg).unwrap();
-    log::info!("{:#?}", candle_stick)
+    let curr_candle: CandleStick = serde_json::from_str::<Kline>(&msg).unwrap().candle.into();
+    let orders = turtle
+      .execute(curr_candle)
+      .map_err(|e| log::error!("Error executing turtle strat: {:#?}", e))
+      .unwrap();
+    for order in orders {
+      test_client.new_order(order, false).await.unwrap()
+    }
   }
-}
-
-async fn test_order_api(config: Setting) {
-  let binance_api = binance::client::Client::new(
-    config.binance.api_key.clone(),
-    config.binance.api_secret.clone(),
-    config.binance.host.clone(),
-    config.binance.proxy.clone(),
-  )
-  .unwrap();
-
-  let timestamp = utils::get_timestamp();
-  let test_id = format!("test_order_{}", timestamp);
-  let test_order = OrderInput {
-    symbol: "BTCUSDT".into(),
-    side: OrderSide::Buy,
-    order_type: OrderType::Limit,
-    time_in_force: Some(TimeInForce::GTC),
-    quantity: Some(0.01),
-    quote_order_qty: None,
-    price: Some(12000.0),
-    new_client_order_id: test_id,
-    stop_price: None,
-    iceberg_qty: None,
-    new_order_resp_type: None,
-    recv_window: None,
-    timestamp,
-  };
-
-  binance_api.new_order(test_order, false).await.unwrap();
-  binance_api.current_open_orders("BTCUSDT".to_string()).await;
 }

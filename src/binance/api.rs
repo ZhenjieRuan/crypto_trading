@@ -22,7 +22,7 @@ impl From<Spot> for String {
 }
 
 /// Enum Spec: https://binance-docs.github.io/apidocs/spot/en/#public-api-definitions
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum OrderSide {
   Buy,
   Sell,
@@ -37,7 +37,7 @@ impl From<OrderSide> for String {
   }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum OrderType {
   Limit,
   Market,
@@ -62,6 +62,7 @@ impl From<OrderType> for String {
   }
 }
 
+#[derive(Debug)]
 pub enum TimeInForce {
   // Good Until Canceled
   GTC,
@@ -81,6 +82,7 @@ impl From<TimeInForce> for String {
   }
 }
 
+#[derive(Debug)]
 pub enum OrderRespType {
   Ack,
   Result,
@@ -97,19 +99,20 @@ impl From<OrderRespType> for String {
   }
 }
 
+#[derive(Debug)]
 pub struct OrderInput {
   pub symbol: String,
   pub side: OrderSide,
   pub order_type: OrderType,
   pub time_in_force: Option<TimeInForce>,
-  pub quantity: Option<f64>,
-  pub quote_order_qty: Option<f64>,
-  pub price: Option<f64>,
+  pub quantity: Option<f32>,
+  pub quote_order_qty: Option<f32>,
+  pub price: Option<f32>,
   pub new_client_order_id: String,
-  pub stop_price: Option<f64>,
-  pub iceberg_qty: Option<f64>,
+  pub stop_price: Option<f32>,
+  pub iceberg_qty: Option<f32>,
   pub new_order_resp_type: Option<OrderRespType>,
-  pub recv_window: Option<u64>, // Can't be greater than 60000,
+  pub recv_window: Option<u32>, // Can't be greater than 60000,
   pub timestamp: i64,
 }
 
