@@ -1,7 +1,13 @@
 [binance]
-api_key = "<Your Binance API Key>"
-api_secret = "<Your Binance API Secret>"
+# Spot Testnet API
+spot_test_api_key = ""
+spot_test_api_secret = ""
+# Mainnet API
+api_key = ""
+api_secret = ""
 test_host = "https://testnet.binance.vision" # Use binance spot testnet
 host = "https://api.binance.com"
-ws_base = "wss://stream.binance.com:9443/ws"
-proxy = "<Optional>"
+ws_base = "wss://stream.binance.com:9443"
+proxy = "" # Optional
+csv_dir="" # Optional
+symbol="btcusdt"

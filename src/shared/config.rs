@@ -11,6 +11,8 @@ pub struct BinanceSetting {
   pub host: String,
   pub ws_base: String,
   pub proxy: Option<String>,
+  pub csv_dir: Option<String>,
+  pub symbol: String
 }
 
 #[derive(Clone, Debug, Deserialize)]

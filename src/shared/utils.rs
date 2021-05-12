@@ -1,8 +1,11 @@
 use anyhow::{ensure, Result};
+use csv::Writer;
 use serde_json::Value;
 use std::collections::BTreeMap;
 
 use crate::binance::api::{KlineInput, OrderInput, OrderType};
+
+use super::csv_schema::CsvDataType;
 
 pub fn get_timestamp() -> i64 {
   chrono::Utc::now().timestamp_millis()
@@ -23,6 +26,40 @@ pub fn to_i64(v: &Value) -> i64 {
 
 pub fn to_f64(v: &Value) -> f64 {
   v.as_str().unwrap().parse().unwrap()
+}
+
+pub fn get_csv_writer(
+  csv_dir: &str,
+  symbol: &str,
+  data_type: CsvDataType,
+  date: &str,
+) -> Writer<std::fs::File> {
+  let file = std::fs::OpenOptions::new()
+    .write(true)
+    .create(true)
+    .append(true)
+    .open(format!(
+      "{}/{}_{}_{}",
+      csv_dir,
+      symbol,
+      String::from(data_type.clone()),
+      date
+    ))
+    .unwrap();
+  let mut writer = csv::Writer::from_writer(file);
+  if let CsvDataType::OrderBook = data_type {
+    let orderbook_csv_header = (1..11).fold(vec!["md_time".to_string()], |mut header, i| {
+      header.push(format!("buy{}", i));
+      header.push(format!("sale{}", i));
+      header.push(format!("bc{}", i));
+      header.push(format!("sc{}", i));
+      header.push(format!("mid{}", i));
+      header
+    });
+    writer.write_record(orderbook_csv_header).unwrap();
+    writer.flush().unwrap();
+  }
+  writer
 }
 
 /// Query Builders

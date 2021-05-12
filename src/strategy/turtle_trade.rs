@@ -1,5 +1,4 @@
 use crate::binance::api::{KlineResp, OrderInput, OrderSide, OrderType};
-use crate::binance::websocket::StreamCandle;
 use crate::strategy::CandleStick;
 use anyhow::{ensure, Result};
 use std::collections::VecDeque;
@@ -156,7 +155,7 @@ impl Turtle {
   }
 
   fn calc_total_asset(&self, curr_price: f64) -> f64 {
-    let short_profit = self.short_position.iter().fold(0.0, |mut profit, elem| {
+    let short_profit = self.short_position.iter().fold(0.0, |profit, elem| {
       let (amount, price) = elem;
       profit + (curr_price - price) * amount
     });

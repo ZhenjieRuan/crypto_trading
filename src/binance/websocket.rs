@@ -49,3 +49,33 @@ pub struct Kline {
   #[serde(rename = "k")]
   pub candle: StreamCandle,
 }
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct StreamTrade {
+  #[serde(rename = "e")]
+  pub event_type: String,
+  #[serde(rename = "E")]
+  pub event_time: i64, // Time of websocket event
+  #[serde(rename = "s")]
+  pub symbol: String,
+  #[serde(rename = "t")]
+  pub trade_id: u64,
+  #[serde(rename = "p")]
+  pub price: String,
+  #[serde(rename = "q")]
+  pub quantity: String,
+  #[serde(rename = "b")]
+  pub buyer_order_id: u64,
+  #[serde(rename = "a")]
+  pub seller_order_id: u64,
+  #[serde(rename = "T")]
+  pub trade_time: i64, // Time of transaction
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct StreamOrderbook {
+  pub last_update_id: i64,
+  pub bids: Vec<Vec<String>>,
+  pub asks: Vec<Vec<String>>,
+}
